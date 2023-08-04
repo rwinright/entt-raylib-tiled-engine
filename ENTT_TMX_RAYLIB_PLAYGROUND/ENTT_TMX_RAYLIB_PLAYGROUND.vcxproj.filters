@@ -13,11 +13,14 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Resources">
+    <Filter Include="resources">
       <UniqueIdentifier>{4abda824-2624-47be-9e81-ad00ceec2594}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resources\desert-test">
+    <Filter Include="resources\desert-example">
       <UniqueIdentifier>{fa04e099-f335-447f-be2f-1b630ee0dc30}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resources\forest-example">
+      <UniqueIdentifier>{f18489fc-01d6-44ea-89e5-850be99b47c9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -29,24 +32,21 @@
     <ClInclude Include="entt.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="raylib-tileson.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\desert-example\desert.json">
-      <Filter>Resources\desert-test</Filter>
+      <Filter>resources\desert-example</Filter>
     </None>
     <None Include="resources\desert-example\desert.tmx">
-      <Filter>Resources\desert-test</Filter>
+      <Filter>resources\desert-example</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\desert-example\Raylib_logo.png">
-      <Filter>Resources\desert-test</Filter>
+      <Filter>resources\desert-example</Filter>
     </Image>
     <Image Include="resources\desert-example\tmw_desert_spacing.png">
-      <Filter>Resources\desert-test</Filter>
+      <Filter>resources\desert-example</Filter>
     </Image>
   </ItemGroup>
 </Project>

@@ -4,6 +4,12 @@
 #include <string>
 #include "entt.hpp"
 
+//tmx includes
+#include <tmxlite/Map.hpp>
+#include <tmxlite/Layer.hpp>
+#include <tmxlite/TileLayer.hpp>
+#include <tmxlite/ObjectGroup.hpp>
+
 //ope
 using namespace std;
 
@@ -21,45 +27,150 @@ struct TransformComponent {
     float speed;
 };
 
-struct PaddleComponent
-{
-    int playerNumber;
-};
-
 struct DrawComponent {
     Vector2 size;
     Color color;
 };
 
+struct CollisionComponent {
+    Rectangle bounds;
+};
+
+struct PlayerComponent {
+    bool isPlayer;
+};
+
+// Function to draw a single tile
+void DrawTile(Texture2D tileset, int tileID, int posX, int posY, int tileWidth, int tileHeight)
+{
+    // Calculate the position of the tile in the tileset texture based on its tile ID
+    int tileX = ((tileID - 1) % (tileset.width / tileWidth)) * tileWidth;
+    int tileY = ((tileID - 1) / (tileset.width / tileWidth)) * tileHeight;
+
+    Rectangle sourceRect = { (float)tileX, (float)tileY, (float)tileWidth, (float)tileHeight };
+    Rectangle destRect = { (float)posX, (float)posY, (float)tileWidth, (float)tileHeight };
+
+    // Draw the tile using your graphics library's functions (e.g., Raylib's DrawTextureRec)
+    DrawTextureRec(tileset, sourceRect, Vector2 {destRect.x, destRect.y}, WHITE);
+}
+
+bool HandleDrawingMap(const tmx::Map& map, const Texture2D& tileset, entt::registry &registry, bool mapDrawn)
+{
+    const auto tileSize = map.getTileSize();
+    const int width = map.getTileCount().x;
+    const int height = map.getTileCount().y;
+
+    const int tileWidthWithSpacing = tileSize.x + 0; // Adjust the spacing based on your tileset
+    const int tileHeightWithSpacing = tileSize.y + 0; // Adjust the spacing based on your tileset
+    const int marginX = 0; // Adjust the margin based on your tileset
+    const int marginY = 0; // Adjust the margin based on your tileset
+
+    // Render tile layers
+    for (const auto& layer : map.getLayers())
+    {
+        if (layer->getType() == tmx::Layer::Type::Tile)
+        {
+            const auto& tileLayer = layer->getLayerAs<tmx::TileLayer>();
+            const auto& tiles = tileLayer.getTiles();
+
+            // Iterate through the tiles within the layer's dimensions
+            for (int y = 0; y < height; ++y)
+            {
+                for (int x = 0; x < width; ++x)
+                {
+                    const auto& tile = tiles[(y * width) + x];
+                    if (tile.ID != 0)
+                    {
+                        // Calculate the position of the tile on the screen
+                        int tileX = (x * tileWidthWithSpacing) + marginX;
+                        int tileY = (y * tileHeightWithSpacing) + marginY;
+
+                        if (!mapDrawn && layer->getName() == "Walls")
+                        {
+                            const auto& props = layer->getProperties();
+                            if (props[0].getBoolValue())
+                            {
+                                auto collisionBox = registry.create();
+                                registry.emplace<CollisionComponent>(collisionBox, Rectangle{(float)tileX, (float)tileY, (float)tileSize.x, (float)tileSize.y});
+                                registry.emplace<DrawComponent>(collisionBox, Vector2{ (float)tileSize.x, (float)tileSize.y }, RED);
+                                registry.emplace<TransformComponent>(collisionBox, Vector2{ (float)tileX, (float)tileY }, 0.f);
+                            }
+                            cout << "Drawing tile entities" << endl;
+                        }
+
+                        // Draw the tile at the calculated position
+                        DrawTile(tileset, tile.ID, tileX, tileY, tileSize.x, tileSize.y);
+                    }
+                }
+            }
+        }
+    }
+    return true;
+}
+
+
+
 void MovementSystem(entt::registry& registry, float deltaTime)
 {
     int YMovement = IsKeyDown(KEY_S) - IsKeyDown(KEY_W);
-    auto playerEntities = registry.view<TransformComponent, PaddleComponent>();
+    int XMovement = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
+    auto playerEntities = registry.view<TransformComponent, PlayerComponent>();
 
     //Wanted to experiment with the lambda
-    playerEntities.each([YMovement, deltaTime](TransformComponent& transform, PaddleComponent& paddle)
+    playerEntities.each([YMovement, XMovement, deltaTime](TransformComponent& transform, PlayerComponent& player)
     {
-        if(paddle.playerNumber == 1)
+        if(player.isPlayer)
             transform.position.y += YMovement * transform.speed * deltaTime;
+            transform.position.x += XMovement * transform.speed * deltaTime;
     });
 }
 
 void DrawSystem(entt::registry& registry)
 {
-    auto drawableEntities = registry.view<DrawComponent, TransformComponent>();
+    auto drawableEntities = registry.view<DrawComponent, TransformComponent, CollisionComponent>();
 
     for (auto ent : drawableEntities)
     {
         auto &transform = drawableEntities.get<TransformComponent>(ent);
         auto &draw = drawableEntities.get<DrawComponent>(ent);
+        auto &coll = drawableEntities.get<CollisionComponent>(ent);
+
+        //Update collision bounds tooo
+        coll.bounds.x = transform.position.x;
+        coll.bounds.y = transform.position.y;
+        coll.bounds.height = draw.size.y;
+        coll.bounds.width = draw.size.x;
 
         DrawRectangle(transform.position.x, transform.position.y, draw.size.x, draw.size.y, draw.color);
     }
 }
 
+int collisionTimer = 0;
+void CollisionSystem(entt::registry& registry)
+{
+    auto view = registry.view<CollisionComponent>();
+    for (entt::entity ent : view)
+    {
+        auto& collision_bounds_1 = view.get<CollisionComponent>(ent);
+
+        for (auto ent2 : view)
+        {
+            auto& collision_bounds_2 = view.get<CollisionComponent>(ent2);
+            if (ent != ent2)
+            {
+                if (CheckCollisionRecs(collision_bounds_1.bounds, collision_bounds_2.bounds))
+                {
+                    ++collisionTimer;
+                    cout << "Collision Detected " << collisionTimer << " times" << endl;
+                }
+            }
+        }
+    }
+}
+
 int main()
 {
-    InitWindow(800, 600, "Pong");
+    InitWindow(640, 640, "Entt Raylib TMXLite Example");
     SetWindowState(FLAG_VSYNC_HINT);
     SetTargetFPS(60);
 
@@ -68,15 +179,28 @@ int main()
 
     int playerWon = 0; //Which player won state
 
+    //Tilemap texture
+    Texture2D tilemap_texture = LoadTexture("resources/dungeon-example/dungeon_tileset.png");
+
+    //Fuck yeah, start doing some map shit
+    tmx::Map map;
+    if (map.load("resources/dungeon-example/dungeon.tmx"))
+    {
+        //??
+    }
+
+
     //Create registry
     entt::registry registry;
 
     //Create entities
     entt::entity playerLeftEntity = registry.create();
     registry.emplace<TransformComponent>(playerLeftEntity, Vector2{10.f, 10.f}, 100.f);
-    registry.emplace<PaddleComponent>(playerLeftEntity, 1);
-    registry.emplace<DrawComponent>(playerLeftEntity, Vector2{10.f, 100.f}, WHITE);
+    registry.emplace<DrawComponent>(playerLeftEntity, Vector2{10.f, 10.f}, WHITE);
+    registry.emplace<CollisionComponent>(playerLeftEntity, Rectangle{10, 10, 10, 10});
+    registry.emplace<PlayerComponent>(playerLeftEntity, true);
 
+    bool mapDrawn = false;
 
     while (!WindowShouldClose())
     {
@@ -112,8 +236,11 @@ int main()
             break;
         case GameState::Play: //Draw gameplay
 
+            mapDrawn = HandleDrawingMap(map, tilemap_texture, registry, mapDrawn);
             MovementSystem(registry, dt);
             DrawSystem(registry);
+            CollisionSystem(registry);
+
 
             //Show pause screen
             if (IsKeyPressed(KEY_P) || IsKeyPressed(KEY_ENTER) || IsKeyPressed(GAMEPAD_BUTTON_MIDDLE_RIGHT))

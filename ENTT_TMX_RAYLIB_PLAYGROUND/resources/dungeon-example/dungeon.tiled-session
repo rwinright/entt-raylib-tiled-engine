@@ -1,0 +1,44 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "dungeon.tmx",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "dungeon.tmx": {
+            "scale": 1.845078125,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 320.3116399203964,
+                "y": 320.04064868526916
+            }
+        },
+        "dungeon.tsx": {
+            "scaleInDock": 3,
+            "scaleInEditor": 3
+        }
+    },
+    "last.imagePath": "D:/gdev/CPP/ENTT_TMX_RAYLIB_PLAYGROUND/ENTT_TMX_RAYLIB_PLAYGROUND/resources/dungeon-example",
+    "map.height": 40,
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 16,
+    "map.tileWidth": 16,
+    "map.width": 40,
+    "openFiles": [
+        "dungeon.tsx",
+        "dungeon.tmx"
+    ],
+    "project": "dungeon.tiled-project",
+    "property.type": "bool",
+    "recentFiles": [
+        "dungeon.tsx",
+        "dungeon.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}
