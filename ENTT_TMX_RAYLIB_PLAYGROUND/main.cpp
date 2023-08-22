@@ -1,4 +1,5 @@
 #include "raylib.h"
+#include "raymath.h"
 #include <iostream>
 #include <vector>
 #include <string>
@@ -22,6 +23,12 @@ enum class GameState {
     Restart
 };
 
+enum class CollisionType {
+    Player,
+    Wall,
+    Enemy
+};
+
 struct TransformComponent {
     Vector2 position;
     float speed;
@@ -34,10 +41,16 @@ struct DrawComponent {
 
 struct CollisionComponent {
     Rectangle bounds;
+    CollisionType collision_type;
 };
 
 struct PlayerComponent {
     bool isPlayer;
+};
+
+struct EnemyComponent {
+    string name;
+    int damage;
 };
 
 // Function to draw a single tile
@@ -91,7 +104,7 @@ bool HandleDrawingMap(const tmx::Map& map, const Texture2D& tileset, entt::regis
                             if (props[0].getBoolValue())
                             {
                                 auto collisionBox = registry.create();
-                                registry.emplace<CollisionComponent>(collisionBox, Rectangle{(float)tileX, (float)tileY, (float)tileSize.x, (float)tileSize.y});
+                                registry.emplace<CollisionComponent>(collisionBox, Rectangle{(float)tileX, (float)tileY, (float)tileSize.x, (float)tileSize.y}, CollisionType::Wall);
                                 registry.emplace<DrawComponent>(collisionBox, Vector2{ (float)tileSize.x, (float)tileSize.y }, RED);
                                 registry.emplace<TransformComponent>(collisionBox, Vector2{ (float)tileX, (float)tileY }, 0.f);
                             }
@@ -114,14 +127,17 @@ void MovementSystem(entt::registry& registry, float deltaTime)
 {
     int YMovement = IsKeyDown(KEY_S) - IsKeyDown(KEY_W);
     int XMovement = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
+
     auto playerEntities = registry.view<TransformComponent, PlayerComponent>();
 
+    auto v = Vector2Normalize(Vector2{(float)XMovement, (float)YMovement});
+
     //Wanted to experiment with the lambda
-    playerEntities.each([YMovement, XMovement, deltaTime](TransformComponent& transform, PlayerComponent& player)
+    playerEntities.each([v, deltaTime](TransformComponent& transform, PlayerComponent& player)
     {
         if(player.isPlayer)
-            transform.position.y += YMovement * transform.speed * deltaTime;
-            transform.position.x += XMovement * transform.speed * deltaTime;
+            transform.position.y += v.y * transform.speed * deltaTime;
+            transform.position.x += v.x * transform.speed * deltaTime;
     });
 }
 
@@ -148,18 +164,44 @@ void DrawSystem(entt::registry& registry)
 int collisionTimer = 0;
 void CollisionSystem(entt::registry& registry)
 {
-    auto view = registry.view<CollisionComponent>();
-    for (entt::entity ent : view)
-    {
-        auto& collision_bounds_1 = view.get<CollisionComponent>(ent);
+    auto playerView = registry.view<CollisionComponent, PlayerComponent>();
+    auto otherEntView = registry.view<CollisionComponent>(entt::exclude<PlayerComponent>);
+    auto enemyView = registry.view<EnemyComponent>();
 
-        for (auto ent2 : view)
+    for (entt::entity ent : playerView)
+    {
+        auto& collision_bounds_1 = playerView.get<CollisionComponent>(ent);
+
+        for (auto ent2 : otherEntView)
         {
-            auto& collision_bounds_2 = view.get<CollisionComponent>(ent2);
+            auto& collision_bounds_2 = otherEntView.get<CollisionComponent>(ent2);
             if (ent != ent2)
             {
                 if (CheckCollisionRecs(collision_bounds_1.bounds, collision_bounds_2.bounds))
                 {
+                    switch (collision_bounds_2.collision_type)
+                    {
+                        case CollisionType::Player:
+                        {
+                            cout << "Player collision detected" << endl;
+                            break;
+                        }
+                         
+                        case CollisionType::Enemy:
+                        {
+                            auto& eComp = enemyView.get<EnemyComponent>(ent2);
+                            cout << "Enemy collision detected: " << "His name is " << eComp.name << " and he does " << eComp.damage << " damage to you" << endl;
+                            break;
+                        }
+
+                        case CollisionType::Wall:
+                        {
+                            cout << "Wall collision detected" << endl;
+                            break;
+                        }
+                        default:
+                            break;
+                    }
                     ++collisionTimer;
                     cout << "Collision Detected " << collisionTimer << " times" << endl;
                 }
@@ -182,13 +224,8 @@ int main()
     //Tilemap texture
     Texture2D tilemap_texture = LoadTexture("resources/dungeon-example/dungeon_tileset.png");
 
-    //Fuck yeah, start doing some map shit
     tmx::Map map;
-    if (map.load("resources/dungeon-example/dungeon.tmx"))
-    {
-        //??
-    }
-
+    map.load("resources/dungeon-example/dungeon.tmx");
 
     //Create registry
     entt::registry registry;
@@ -197,8 +234,15 @@ int main()
     entt::entity playerLeftEntity = registry.create();
     registry.emplace<TransformComponent>(playerLeftEntity, Vector2{10.f, 10.f}, 100.f);
     registry.emplace<DrawComponent>(playerLeftEntity, Vector2{10.f, 10.f}, WHITE);
-    registry.emplace<CollisionComponent>(playerLeftEntity, Rectangle{10, 10, 10, 10});
+    registry.emplace<CollisionComponent>(playerLeftEntity, Rectangle{10, 10, 10, 10}, CollisionType::Player);
     registry.emplace<PlayerComponent>(playerLeftEntity, true);
+    
+    //Create basic enemy
+    entt::entity enemyEntity = registry.create();
+    registry.emplace<TransformComponent>(enemyEntity, Vector2{100.f, 100.f}, 10.f);
+    registry.emplace<DrawComponent>(enemyEntity, Vector2{10.f, 10.f}, RED);
+    registry.emplace<CollisionComponent>(enemyEntity, Rectangle{10, 10, 10, 10}, CollisionType::Enemy);
+    registry.emplace<EnemyComponent>(enemyEntity, "Steve-o", 32);
 
     bool mapDrawn = false;
 

@@ -22,6 +22,9 @@
     <Filter Include="resources\forest-example">
       <UniqueIdentifier>{f18489fc-01d6-44ea-89e5-850be99b47c9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="resources\iso-example">
+      <UniqueIdentifier>{e1028f9d-a274-495c-b3f2-a4e10afdb26c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -40,6 +43,12 @@
     <None Include="resources\desert-example\desert.tmx">
       <Filter>resources\desert-example</Filter>
     </None>
+    <None Include="resources\iso-example\iso.tsx">
+      <Filter>resources\iso-example</Filter>
+    </None>
+    <None Include="resources\iso-example\water.tmx">
+      <Filter>resources\iso-example</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\desert-example\Raylib_logo.png">
@@ -47,6 +56,9 @@
     </Image>
     <Image Include="resources\desert-example\tmw_desert_spacing.png">
       <Filter>resources\desert-example</Filter>
+    </Image>
+    <Image Include="resources\iso-example\spritesheet.png">
+      <Filter>resources\iso-example</Filter>
     </Image>
   </ItemGroup>
 </Project>

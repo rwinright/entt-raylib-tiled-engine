@@ -1,0 +1,40 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "water.tmx",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "fileStates": {
+        "iso.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "water.tmx": {
+            "scale": 1.4760624999999998,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 399.03459372485923,
+                "y": 398.6958546809503
+            }
+        }
+    },
+    "last.exportedFilePath": "D:/gdev/CPP/ENTT_TMX_RAYLIB_PLAYGROUND/ENTT_TMX_RAYLIB_PLAYGROUND/resources/iso-example",
+    "last.imagePath": "D:/gdev/CPP/ENTT_TMX_RAYLIB_PLAYGROUND/ENTT_TMX_RAYLIB_PLAYGROUND/resources/iso-example",
+    "map.lastUsedExportFilter": "Tiled map files (*.tmx *.xml)",
+    "map.lastUsedFormat": "tmx",
+    "map.layerDataFormat": null,
+    "map.orientation": null,
+    "openFiles": [
+        "iso.tsx",
+        "water.tmx"
+    ],
+    "project": "iso.tiled-project",
+    "recentFiles": [
+        "iso.tsx",
+        "water.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx"
+}
