@@ -191,6 +191,7 @@ void CollisionSystem(entt::registry& registry)
                         {
                             auto& eComp = enemyView.get<EnemyComponent>(ent2);
                             cout << "Enemy collision detected: " << "His name is " << eComp.name << " and he does " << eComp.damage << " damage to you" << endl;
+                            registry.destroy(ent2);
                             break;
                         }
 
@@ -206,8 +207,20 @@ void CollisionSystem(entt::registry& registry)
                     cout << "Collision Detected " << collisionTimer << " times" << endl;
                 }
             }
+
         }
     }
+}
+
+//Use this to spawn enemies into the world as-needed
+void createEnemy(entt::registry &registry, Vector2 pos = {static_cast<float>(GetRandomValue(16, 608)), static_cast<float>(GetRandomValue(16, 608)) })
+{
+    //Create basic enemy
+    entt::entity enemyEntity = registry.create();
+    registry.emplace<TransformComponent>(enemyEntity, pos, 10.f);
+    registry.emplace<DrawComponent>(enemyEntity, Vector2{ 10.f, 10.f }, RED);
+    registry.emplace<CollisionComponent>(enemyEntity, Rectangle{ 10, 10, 10, 10 }, CollisionType::Enemy);
+    registry.emplace<EnemyComponent>(enemyEntity, "Steve-o", 32);
 }
 
 int main()
@@ -237,12 +250,7 @@ int main()
     registry.emplace<CollisionComponent>(playerLeftEntity, Rectangle{10, 10, 10, 10}, CollisionType::Player);
     registry.emplace<PlayerComponent>(playerLeftEntity, true);
     
-    //Create basic enemy
-    entt::entity enemyEntity = registry.create();
-    registry.emplace<TransformComponent>(enemyEntity, Vector2{100.f, 100.f}, 10.f);
-    registry.emplace<DrawComponent>(enemyEntity, Vector2{10.f, 10.f}, RED);
-    registry.emplace<CollisionComponent>(enemyEntity, Rectangle{10, 10, 10, 10}, CollisionType::Enemy);
-    registry.emplace<EnemyComponent>(enemyEntity, "Steve-o", 32);
+    createEnemy(registry);
 
     bool mapDrawn = false;
 
@@ -285,6 +293,8 @@ int main()
             DrawSystem(registry);
             CollisionSystem(registry);
 
+            if (IsKeyPressed(KEY_COMMA))
+                createEnemy(registry);
 
             //Show pause screen
             if (IsKeyPressed(KEY_P) || IsKeyPressed(KEY_ENTER) || IsKeyPressed(GAMEPAD_BUTTON_MIDDLE_RIGHT))
